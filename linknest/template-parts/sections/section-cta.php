@@ -1,0 +1,1 @@
+<section class="section"><div class="container cta reveal"><h2><?php esc_html_e( 'Scale your links with LINKNEST', 'linknest' ); ?></h2><a class="ln-button ln-button-primary" href="#hero"><?php esc_html_e( 'Start now', 'linknest' ); ?></a></div></section>
