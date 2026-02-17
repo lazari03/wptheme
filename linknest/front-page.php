@@ -7,15 +7,35 @@
 
 get_header();
 
-get_template_part( 'template-parts/heroes/hero', linknest_get_hero_layout() );
-get_template_part( 'template-parts/sections/section', 'features' );
-get_template_part( 'template-parts/sections/section', 'testimonials' );
-get_template_part( 'template-parts/sections/section', 'pricing' );
-get_template_part( 'template-parts/sections/section', 'cta' );
+if ( get_theme_mod( 'linknest_hero_enable', true ) ) {
+	get_template_part( 'template-parts/hero' );
+}
+
+if ( get_theme_mod( 'linknest_features_enable', true ) ) {
+	get_template_part( 'template-parts/features' );
+}
+
+if ( get_theme_mod( 'linknest_testimonials_enable', true ) ) {
+	get_template_part( 'template-parts/testimonials' );
+}
+
+if ( get_theme_mod( 'linknest_pricing_enable', true ) ) {
+	get_template_part( 'template-parts/pricing' );
+}
+
+get_template_part( 'template-parts/cta' );
 
 while ( have_posts() ) {
 	the_post();
-	the_content();
+	if ( trim( (string) get_the_content() ) ) {
+		?>
+		<section class="section">
+			<div class="container content-card reveal">
+				<?php the_content(); ?>
+			</div>
+		</section>
+		<?php
+	}
 }
 
 get_footer();

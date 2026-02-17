@@ -9,80 +9,205 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-function linknest_sanitize_checkbox( $value ) {
-	return ( isset( $value ) && true === (bool) $value );
+/**
+ * Sanitize checkbox.
+ *
+ * @param mixed $checked Value.
+ * @return bool
+ */
+function linknest_sanitize_checkbox( $checked ) {
+	return ( isset( $checked ) && true === (bool) $checked );
 }
 
+/**
+ * Register customizer settings.
+ *
+ * @param WP_Customize_Manager $wp_customize Manager instance.
+ */
 function linknest_customize_register( $wp_customize ) {
 	$wp_customize->add_panel(
-		'linknest_theme_options',
+		'linknest_global_panel',
 		array(
-			'title'    => __( 'LINKNEST Theme Options', 'linknest' ),
+			'title'    => __( 'Global Settings', 'linknest' ),
 			'priority' => 10,
 		)
 	);
 
-	$sections = array(
-		'global'      => __( 'Global Colors', 'linknest' ),
-		'typography'  => __( 'Typography', 'linknest' ),
-		'header'      => __( 'Header', 'linknest' ),
-		'footer'      => __( 'Footer', 'linknest' ),
-		'hero'        => __( 'Hero', 'linknest' ),
-		'layout'      => __( 'Layout', 'linknest' ),
-		'animations'  => __( 'Animations', 'linknest' ),
-		'woocommerce' => __( 'WooCommerce', 'linknest' ),
-		'performance' => __( 'Performance', 'linknest' ),
+	$wp_customize->add_section(
+		'linknest_global_section',
+		array(
+			'title' => __( 'Brand & Layout', 'linknest' ),
+			'panel' => 'linknest_global_panel',
+		)
 	);
 
-	foreach ( $sections as $id => $label ) {
-		$wp_customize->add_section(
-			'linknest_' . $id,
+	$colors = array(
+		'linknest_primary_color'   => '#7c3aed',
+		'linknest_accent_color'    => '#22d3ee',
+		'linknest_gradient_start'  => '#7c3aed',
+		'linknest_gradient_end'    => '#22d3ee',
+		'linknest_hero_grad_start' => '#1f1147',
+		'linknest_hero_grad_end'   => '#4a1ca0',
+	);
+
+	foreach ( $colors as $id => $default ) {
+		$wp_customize->add_setting(
+			$id,
 			array(
-				'title' => $label,
-				'panel' => 'linknest_theme_options',
+				'default'           => $default,
+				'sanitize_callback' => 'sanitize_hex_color',
+			)
+		);
+
+		$wp_customize->add_control(
+			new WP_Customize_Color_Control(
+				$wp_customize,
+				$id,
+				array(
+					'label'   => ucwords( str_replace( '_', ' ', str_replace( 'linknest_', '', $id ) ) ),
+					'section' => 'linknest_global_section',
+				)
 			)
 		);
 	}
 
-	$wp_customize->add_setting( 'linknest_primary_color', array( 'default' => '#7c3aed', 'sanitize_callback' => 'sanitize_hex_color' ) );
-	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'linknest_primary_color', array( 'label' => __( 'Primary Color', 'linknest' ), 'section' => 'linknest_global' ) ) );
-	$wp_customize->add_setting( 'linknest_accent_color', array( 'default' => '#22d3ee', 'sanitize_callback' => 'sanitize_hex_color' ) );
-	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'linknest_accent_color', array( 'label' => __( 'Accent Color', 'linknest' ), 'section' => 'linknest_global' ) ) );
+	$wp_customize->add_setting(
+		'linknest_typography',
+		array(
+			'default'           => 'inter',
+			'sanitize_callback' => 'sanitize_key',
+		)
+	);
+	$wp_customize->add_control(
+		'linknest_typography',
+		array(
+			'label'   => __( 'Typography', 'linknest' ),
+			'section' => 'linknest_global_section',
+			'type'    => 'select',
+			'choices' => array(
+				'inter'   => 'Inter',
+				'manrope' => 'Manrope',
+				'plus'    => 'Plus Jakarta Sans',
+			),
+		)
+	);
 
-	$wp_customize->add_setting( 'linknest_typography', array( 'default' => 'inter', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_typography', array( 'label' => __( 'Font Family', 'linknest' ), 'section' => 'linknest_typography', 'type' => 'select', 'choices' => array( 'inter' => 'Inter', 'manrope' => 'Manrope', 'plus' => 'Plus Jakarta Sans' ) ) );
+	$wp_customize->add_setting(
+		'linknest_container_width',
+		array(
+			'default'           => 1200,
+			'sanitize_callback' => 'absint',
+		)
+	);
+	$wp_customize->add_control(
+		'linknest_container_width',
+		array(
+			'label'       => __( 'Container Width (px)', 'linknest' ),
+			'section'     => 'linknest_global_section',
+			'type'        => 'number',
+			'input_attrs' => array(
+				'min'  => 960,
+				'max'  => 1440,
+				'step' => 10,
+			),
+		)
+	);
 
-	$wp_customize->add_setting( 'linknest_header_layout', array( 'default' => 'classic', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_header_layout', array( 'label' => __( 'Header Layout', 'linknest' ), 'section' => 'linknest_header', 'type' => 'select', 'choices' => array( 'classic' => 'Header 1 - Classic', 'floating-island' => 'Header 2 - Floating Island', 'centered' => 'Header 3 - Centered', 'split' => 'Header 4 - Split', 'transparent' => 'Header 5 - Transparent', 'minimal-mobile' => 'Header 6 - Minimal Mobile' ) ) );
-	$wp_customize->add_setting( 'linknest_header_sticky', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_header_sticky', array( 'label' => __( 'Enable Sticky Header', 'linknest' ), 'section' => 'linknest_header', 'type' => 'checkbox' ) );
-	$wp_customize->add_setting( 'linknest_header_transparent', array( 'default' => false, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_header_transparent', array( 'label' => __( 'Enable Transparent Header', 'linknest' ), 'section' => 'linknest_header', 'type' => 'checkbox' ) );
+	$wp_customize->add_setting(
+		'linknest_button_style',
+		array(
+			'default'           => 'pill',
+			'sanitize_callback' => 'sanitize_key',
+		)
+	);
+	$wp_customize->add_control(
+		'linknest_button_style',
+		array(
+			'label'   => __( 'Button Style', 'linknest' ),
+			'section' => 'linknest_global_section',
+			'type'    => 'radio',
+			'choices' => array(
+				'pill'   => __( 'Pill', 'linknest' ),
+				'rounded' => __( 'Rounded', 'linknest' ),
+			),
+		)
+	);
 
-	$wp_customize->add_setting( 'linknest_footer_layout', array( 'default' => 'columns-3', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_footer_layout', array( 'label' => __( 'Footer Layout', 'linknest' ), 'section' => 'linknest_footer', 'type' => 'select', 'choices' => array( 'columns-2' => '2 Columns', 'columns-3' => '3 Columns', 'columns-4' => '4 Columns', 'newsletter' => 'Newsletter', 'minimal' => 'Minimal' ) ) );
+	// Hero panel.
+	$wp_customize->add_panel(
+		'linknest_hero_panel',
+		array(
+			'title'    => __( 'Hero Section', 'linknest' ),
+			'priority' => 20,
+		)
+	);
+	$wp_customize->add_section(
+		'linknest_hero_section',
+		array(
+			'title' => __( 'Hero Content', 'linknest' ),
+			'panel' => 'linknest_hero_panel',
+		)
+	);
 
-	$wp_customize->add_setting( 'linknest_hero_layout', array( 'default' => 'gradient', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_hero_layout', array( 'label' => __( 'Hero Variant', 'linknest' ), 'section' => 'linknest_hero', 'type' => 'select', 'choices' => array( 'gradient' => 'Gradient', 'split-image' => 'Split Image', 'glass' => 'Glass', 'video' => 'Video Background', 'animated' => 'Animated Background', 'minimal' => 'Minimal White' ) ) );
+	$wp_customize->add_setting( 'linknest_hero_enable', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
+	$wp_customize->add_control( 'linknest_hero_enable', array( 'label' => __( 'Enable Hero', 'linknest' ), 'section' => 'linknest_hero_section', 'type' => 'checkbox' ) );
 
-	$wp_customize->add_setting( 'linknest_container_width', array( 'default' => 1200, 'sanitize_callback' => 'absint' ) );
-	$wp_customize->add_control( 'linknest_container_width', array( 'label' => __( 'Container Width (px)', 'linknest' ), 'section' => 'linknest_layout', 'type' => 'number' ) );
-	$wp_customize->add_setting( 'linknest_button_style', array( 'default' => 'pill', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_button_style', array( 'label' => __( 'Button Shape', 'linknest' ), 'section' => 'linknest_layout', 'type' => 'radio', 'choices' => array( 'pill' => 'Pill', 'rounded' => 'Rounded' ) ) );
+	$wp_customize->add_setting( 'linknest_hero_title', array( 'default' => __( 'Everything you are. In one, simple link in bio.', 'linknest' ), 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control( 'linknest_hero_title', array( 'label' => __( 'Title', 'linknest' ), 'section' => 'linknest_hero_section', 'type' => 'text' ) );
 
-	$wp_customize->add_setting( 'linknest_enable_animations', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_enable_animations', array( 'label' => __( 'Enable Animations', 'linknest' ), 'section' => 'linknest_animations', 'type' => 'checkbox' ) );
+	$wp_customize->add_setting( 'linknest_hero_subtitle', array( 'default' => __( 'Drive your audience to the right destination with a fast, conversion-focused SaaS website.', 'linknest' ), 'sanitize_callback' => 'sanitize_textarea_field' ) );
+	$wp_customize->add_control( 'linknest_hero_subtitle', array( 'label' => __( 'Subtitle', 'linknest' ), 'section' => 'linknest_hero_section', 'type' => 'textarea' ) );
 
-	$wp_customize->add_setting( 'linknest_wc_products_per_row', array( 'default' => 3, 'sanitize_callback' => 'absint' ) );
-	$wp_customize->add_control( 'linknest_wc_products_per_row', array( 'label' => __( 'Products Per Row', 'linknest' ), 'section' => 'linknest_woocommerce', 'type' => 'number' ) );
-	$wp_customize->add_setting( 'linknest_wc_card_style', array( 'default' => 'modern', 'sanitize_callback' => 'sanitize_key' ) );
-	$wp_customize->add_control( 'linknest_wc_card_style', array( 'label' => __( 'Product Card Style', 'linknest' ), 'section' => 'linknest_woocommerce', 'type' => 'select', 'choices' => array( 'modern' => 'Modern', 'minimal' => 'Minimal' ) ) );
-	$wp_customize->add_setting( 'linknest_wc_quick_view', array( 'default' => false, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_wc_quick_view', array( 'label' => __( 'Enable Quick View', 'linknest' ), 'section' => 'linknest_woocommerce', 'type' => 'checkbox' ) );
-	$wp_customize->add_setting( 'linknest_wc_shop_hero', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_wc_shop_hero', array( 'label' => __( 'Enable Shop Hero', 'linknest' ), 'section' => 'linknest_woocommerce', 'type' => 'checkbox' ) );
+	$wp_customize->add_setting( 'linknest_hero_button_text', array( 'default' => __( 'Get Started Free', 'linknest' ), 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control( 'linknest_hero_button_text', array( 'label' => __( 'Button Text', 'linknest' ), 'section' => 'linknest_hero_section' ) );
 
-	$wp_customize->add_setting( 'linknest_perf_defer_scripts', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
-	$wp_customize->add_control( 'linknest_perf_defer_scripts', array( 'label' => __( 'Defer Theme Scripts', 'linknest' ), 'section' => 'linknest_performance', 'type' => 'checkbox' ) );
+	$wp_customize->add_setting( 'linknest_hero_button_link', array( 'default' => '#pricing', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control( 'linknest_hero_button_link', array( 'label' => __( 'Button Link', 'linknest' ), 'section' => 'linknest_hero_section' ) );
+
+	// Section controls.
+	$sections = array(
+		'features'     => __( 'Features Section', 'linknest' ),
+		'testimonials' => __( 'Testimonials Section', 'linknest' ),
+		'pricing'      => __( 'Pricing Section', 'linknest' ),
+	);
+
+	$priority = 30;
+	foreach ( $sections as $slug => $title ) {
+		$panel_id = 'linknest_' . $slug . '_panel';
+		$section_id = 'linknest_' . $slug . '_section';
+
+		$wp_customize->add_panel(
+			$panel_id,
+			array(
+				'title'    => $title,
+				'priority' => $priority,
+			)
+		);
+
+		$wp_customize->add_section(
+			$section_id,
+			array(
+				'title' => __( 'Settings', 'linknest' ),
+				'panel' => $panel_id,
+			)
+		);
+
+		$wp_customize->add_setting( 'linknest_' . $slug . '_enable', array( 'default' => true, 'sanitize_callback' => 'linknest_sanitize_checkbox' ) );
+		$wp_customize->add_control( 'linknest_' . $slug . '_enable', array( 'label' => __( 'Enable Section', 'linknest' ), 'section' => $section_id, 'type' => 'checkbox' ) );
+
+		$wp_customize->add_setting(
+			'linknest_' . $slug . '_title',
+			array(
+				'default'           => ucfirst( $slug ),
+				'sanitize_callback' => 'sanitize_text_field',
+			)
+		);
+		$wp_customize->add_control( 'linknest_' . $slug . '_title', array( 'label' => __( 'Section Title', 'linknest' ), 'section' => $section_id ) );
+
+		$priority += 10;
+	}
+
+	$wp_customize->add_setting( 'linknest_highlight_plan', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control( 'linknest_highlight_plan', array( 'label' => __( 'Highlight Plan (title)', 'linknest' ), 'section' => 'linknest_pricing_section' ) );
 }
 add_action( 'customize_register', 'linknest_customize_register' );

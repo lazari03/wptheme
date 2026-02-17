@@ -9,32 +9,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Register LINKNEST CPTs.
+ */
 function linknest_register_custom_post_types() {
 	$types = array(
-		'linknest_header'       => __( 'Headers', 'linknest' ),
-		'linknest_footer'       => __( 'Footers', 'linknest' ),
-		'linknest_hero'         => __( 'Heroes', 'linknest' ),
-		'linknest_template'     => __( 'Templates', 'linknest' ),
-		'linknest_pricing'      => __( 'Pricing Plans', 'linknest' ),
-		'linknest_features'     => __( 'Features', 'linknest' ),
-		'linknest_testimonials' => __( 'Testimonials', 'linknest' ),
+		'linknest_feature' => array(
+			'singular' => __( 'Feature', 'linknest' ),
+			'plural'   => __( 'Features', 'linknest' ),
+		),
+		'linknest_testimonial' => array(
+			'singular' => __( 'Testimonial', 'linknest' ),
+			'plural'   => __( 'Testimonials', 'linknest' ),
+		),
+		'linknest_pricing' => array(
+			'singular' => __( 'Pricing Plan', 'linknest' ),
+			'plural'   => __( 'Pricing Plans', 'linknest' ),
+		),
 	);
 
-	foreach ( $types as $slug => $plural ) {
-		$singular = rtrim( $plural, 's' );
-
+	foreach ( $types as $slug => $label ) {
 		register_post_type(
 			$slug,
 			array(
-				'labels'       => array(
-					'name'          => $plural,
-					'singular_name' => $singular,
+				'labels' => array(
+					'name'          => $label['plural'],
+					'singular_name' => $label['singular'],
+					'add_new_item'  => sprintf( __( 'Add New %s', 'linknest' ), $label['singular'] ),
+					'edit_item'     => sprintf( __( 'Edit %s', 'linknest' ), $label['singular'] ),
 				),
-				'public'       => true,
-				'show_in_rest' => true,
-				'has_archive'  => true,
-				'supports'     => array( 'title', 'editor', 'thumbnail' ),
-				'rewrite'      => array( 'slug' => str_replace( 'linknest_', '', $slug ) ),
+				'public'             => true,
+				'show_in_rest'       => true,
+				'menu_icon'          => 'dashicons-screenoptions',
+				'has_archive'        => true,
+				'supports'           => array( 'title', 'editor', 'thumbnail' ),
+				'rewrite'            => array( 'slug' => str_replace( 'linknest_', '', $slug ) ),
 			)
 		);
 	}
